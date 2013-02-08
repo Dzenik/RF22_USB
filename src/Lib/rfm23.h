@@ -69,8 +69,6 @@ volatile static uint8_t RFM23_ISR2 = 0x00;
 volatile static uint8_t RFM23_STATUS = 0x00;
 #define RFM23_STATUS_INTERRUPT		0x00 | (1 << 0)
 
-
-
 /*
 	spi functions
 */

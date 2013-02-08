@@ -6,6 +6,7 @@
 #include <util/delay.h>
 #include "rfm23.h"
 
+#define SOURCE_ADDRESS 0xFF //Source address of board (defaults to 0xFF)
 /*
 	spi functions
 */
@@ -457,7 +458,6 @@ uint8_t rfm23_get_rssi(void) {
   return rfm23_read(0x26);
 }
 
-unsigned char SOURCE_ADDRESS = 0xFF; //Source address of board (defaults to 0xFF)
 // Initialize the RFM22 for transmitting
 void rfm23_setup(void)
 {

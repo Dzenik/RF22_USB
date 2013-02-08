@@ -42,6 +42,9 @@
         #include <avr/wdt.h>
         #include <avr/interrupt.h>
         #include <avr/power.h>
+        #include <stdlib.h>
+        #include <stdbool.h>
+//        #include <math.h>
 
         #include "Descriptors.h"
         #include "Lib/rfm23.h"
@@ -59,7 +62,5 @@
         void EVENT_USB_Device_ConfigurationChanged(void);
         void EVENT_USB_Device_ControlRequest(void);
 
-      void IRQ_Handler(unsigned char*);                 //Handles Interrupts
-      
 #endif
 
