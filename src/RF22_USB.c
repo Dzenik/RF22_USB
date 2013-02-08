@@ -43,26 +43,26 @@
 /** Underlying data buffer for \ref FromHost_Buffer, where the stored bytes are located. */
 //static uint8_t      FromHost_Buffer_Data[128];
 
-volatile bool IRQ_TRIGGERED;			//Flag indicating when an IRQ has occured
-volatile long int  DELAY_INTRS = 0;		//Used in timer 2 for timeouts
-bool ALOHA_MODE_FLAG = false;			//Flag to indicate if in byte-by-byte mode or ALOHA mode (default is byte-by-byte)
-bool ALOHA_RECEIVE_FLAG = false; //Flag to determine if a packet has been received in ALOHA mode
-bool TRANSMITTING = false;  //Flag to indicate radio is currently TRANSMITTING
-bool VALID_ACK = false;					//Flag to determine if a valid ACK message has been received
-int SLOT_TIME_ARRAY[] = {0, 519, 1010, 1502, 1993, 2485, 2976, 3304, 4942, 6582};	//Array of preset slot time values (15 ms increments). (Set via trial and error testing)
-int SLOT_TIME = 2485;					//The slot time in timer counts. Default is ~75ms.
-int LEN_SLOT_TIME_ARRAY = sizeof(SLOT_TIME_ARRAY)/sizeof(*(SLOT_TIME_ARRAY));	//Finds the length of the slot time array
-int BACKOFF_LIMIT = 6;					//2^BACKOFF_LIMIT - 1 is the max value of the back-off timer (default value = 6)
-uint8_t MAX_TRANSMISSIONS = 1;			//The maximum number of times the radio will attempt to transmit a packet
+static volatile bool IRQ_TRIGGERED;			//Flag indicating when an IRQ has occured
+static volatile long int  DELAY_INTRS = 0;		//Used in timer 2 for timeouts
+static bool ALOHA_MODE_FLAG = false;			//Flag to indicate if in byte-by-byte mode or ALOHA mode (default is byte-by-byte)
+static bool ALOHA_RECEIVE_FLAG = false; //Flag to determine if a packet has been received in ALOHA mode
+static bool TRANSMITTING = false;  //Flag to indicate radio is currently TRANSMITTING
+static bool VALID_ACK = false;					//Flag to determine if a valid ACK message has been received
+static int SLOT_TIME_ARRAY[] = {0, 519, 1010, 1502, 1993, 2485, 2976, 3304, 4942, 6582};	//Array of preset slot time values (15 ms increments). (Set via trial and error testing)
+static int SLOT_TIME = 2485;					//The slot time in timer counts. Default is ~75ms.
+static int LEN_SLOT_TIME_ARRAY = sizeof(SLOT_TIME_ARRAY)/sizeof(*(SLOT_TIME_ARRAY));	//Finds the length of the slot time array
+static int BACKOFF_LIMIT = 6;					//2^BACKOFF_LIMIT - 1 is the max value of the back-off timer (default value = 6)
+static uint8_t MAX_TRANSMISSIONS = 1;			//The maximum number of times the radio will attempt to transmit a packet
 
 static unsigned char SOURCE_ADDRESS = 0xFF; //Source address of board (defaults to 0xFF)
 
-void IRQ_Handler(unsigned char*);                 //Handles Interrupts
-void API_Handler(int, unsigned char*, unsigned char*, bool);		//Handles API instructions (in API mode)
-void ALOHA_Receive(unsigned char *, bool, unsigned char *);			//Aloha mode receiver
-void ALOHA_Transmit(unsigned char *, unsigned char*, bool);			//Transmits when in Aloha mode
-void Transmit(unsigned char *, bool);								//Writes data to FIFO on RFM22B and sends transmit command
-void ProcessPacket(unsigned char*);									//Reads in data packets for transmission
+static void IRQ_Handler(unsigned char*);                 //Handles Interrupts
+static void API_Handler(int, unsigned char*, unsigned char*, bool);		//Handles API instructions (in API mode)
+static void ALOHA_Receive(unsigned char *, bool, unsigned char *);			//Aloha mode receiver
+static void ALOHA_Transmit(unsigned char *, unsigned char*, bool);			//Transmits when in Aloha mode
+static void Transmit(unsigned char *, bool);								//Writes data to FIFO on RFM22B and sends transmit command
+static void ProcessPacket(unsigned char*);									//Reads in data packets for transmission
 
 /** LUFA CDC Class driver interface configuration and state information. This structure is
  *  passed to all CDC Class driver functions, so that multiple instances of the same class
@@ -101,8 +101,8 @@ USB_ClassInfo_CDC_Device_t VirtualSerial_CDC_Interface =
 int main(void)
 {
     // Local variables
-    static unsigned char tx_buffer[255];			//Transmission buffer
-    static unsigned char rx_buffer[255];			//Receiver buffer
+    unsigned char tx_buffer[255];			//Transmission buffer
+    unsigned char rx_buffer[255];			//Receiver buffer
     bool API_instruction_flag = false;
 	IRQ_TRIGGERED = false;
 
@@ -212,7 +212,7 @@ void SetupHardware(void)
 	TCNT1 = 0;
 
 	/* Start the flush timer so that overflows occur rapidly to push received bytes to the USB interface */
-	TCCR0B = (1 << CS02);
+//	TCCR0B = (1 << CS02);
 }
 
 /** Event handler for the library USB Configuration Changed event. */
@@ -341,7 +341,7 @@ void API_Handler(int API_instruction, unsigned char* tx_buffer, unsigned char* r
 //Function to read in data packets//
 //================================//
 void ProcessPacket(unsigned char* tx_buffer){
-    int done = 0;
+    uint8_t done = 0;
     int tx_count = 0;
 
     while(!done){
@@ -384,14 +384,14 @@ void ALOHA_Transmit(unsigned char* tx_buffer, unsigned char * rx_buffer, bool AP
     uint8_t delay_count;
     //Aloha transmission code. NOTE: layer 2 frame starts from tx[4] (the first two bytes are useless, tx[3] is the API identifier)
     int tx_count;
-    static unsigned char aloha_buffer[255]; //Buffer for the aloha frame
+    unsigned char aloha_buffer[255]; //Buffer for the aloha frame
     uint8_t transmissions;
     long long int timeout_count = 0;
     long long int timeout_limit = 0;
-    long long int backoff_number;
-    long int random_number_max;
+//    static long long int backoff_number;
+//    static long int random_number_max;
     unsigned char stats_packet[13];	//Statistics packet returned to higher layers
-    long unsigned int mult;
+//    static long unsigned int mult;
     
     //Creating the aloha frame (that we wish to send) from the incoming tx_buffer (frame + instruction headers)
     for (tx_count = 0; tx_count < tx_buffer[1]; tx_count++)
@@ -420,6 +420,7 @@ void ALOHA_Transmit(unsigned char* tx_buffer, unsigned char * rx_buffer, bool AP
         {
             IRQ_Handler(rx_buffer);
         }//while(transmitting)
+
         timeout_count = 256*DELAY_INTRS + TCNT1; //Current value of delay timer
         transmissions +=1;
 
@@ -442,13 +443,13 @@ void ALOHA_Transmit(unsigned char* tx_buffer, unsigned char * rx_buffer, bool AP
         }//while
 
         //Random back-off timer for retransmissions
-        if(!VALID_ACK && (transmissions < MAX_TRANSMISSIONS))
+/*        if(!VALID_ACK && (transmissions < MAX_TRANSMISSIONS))
         {
             timeout_count = 256*DELAY_INTRS + TCNT1;
             //Sets the maximum number of slot times to back off for
                 if(transmissions < (BACKOFF_LIMIT + 1))
                 {
-                    random_number_max = pow(2, transmissions) - 1;
+//                    random_number_max = pow(2, transmissions) - 1;
                 }
                 else
                 {
@@ -468,7 +469,7 @@ void ALOHA_Transmit(unsigned char* tx_buffer, unsigned char * rx_buffer, bool AP
                     timeout_count = 256*DELAY_INTRS + TCNT1;
                 }//while
         }//if(!valid_ACK)
-        
+*/        
     }//while(!valid_ACK && transmissions < MAX_TRANSMISSIONS)
 
     TCCR1B = 0x00; 	//Stops delay timer
@@ -505,9 +506,9 @@ void ALOHA_Transmit(unsigned char* tx_buffer, unsigned char * rx_buffer, bool AP
 
 void ALOHA_Receive(unsigned char * rx_buffer, bool API_instruction_flag, unsigned char * tx_buffer)
 {
-	if(rx_buffer[0] == 0xFF){return;}
-
 	unsigned char ACK[6]; //Creates ACK packet
+
+	if(rx_buffer[0] == 0xFF){return;}
 
 	if(rx_buffer[2] == 0x80)
 	{
@@ -568,11 +569,15 @@ void Transmit(unsigned char *tx_packet, bool API_instruction_flag)
 
 ISR(INT0_vect, ISR_NOBLOCK)
 {
+	cli();
 	IRQ_TRIGGERED = true;	
+	sei();
 }
 
 ISR(TIMER1_OVF_vect)
 {
+    cli();
     //Timer 2 used to measure time to complete transmission
     DELAY_INTRS++;
+    sei();
 }

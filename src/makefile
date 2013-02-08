@@ -21,7 +21,7 @@ TARGET       = RF22_USB
 SRC          = $(TARGET).c Descriptors.c Lib/rfm23.c $(LUFA_SRC_USB) $(LUFA_SRC_USBCLASS)
 LUFA_PATH    = ../LUFA/LUFA
 CC_FLAGS     = -DUSE_LUFA_CONFIG_HEADER -IConfig/
-LD_FLAGS     =
+LD_FLAGS     = 
 
 # Default target
 all:
