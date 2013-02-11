@@ -34,8 +34,8 @@
  *  Header file for SerialToLCD.c.
  */
 
-#ifndef _SERIALTOLCD_H_
-#define _SERIALTOLCD_H_
+#ifndef _RF22_USB_H_
+#define _RF22_USB_H_
 
     /* Includes: */
         #include <avr/io.h>
@@ -44,14 +44,13 @@
         #include <avr/power.h>
         #include <stdlib.h>
         #include <stdbool.h>
-//        #include <math.h>
 
         #include "Descriptors.h"
         #include "Lib/rfm23.h"
 
         #include <LUFA/Version.h>
-        #include <LUFA/Drivers/Misc/RingBuffer.h>
         #include <LUFA/Drivers/USB/USB.h>
+        #include <LUFA/Drivers/Board/LEDs.h>
 		
 	/* Macros: */
 		#define COMMAND_ESCAPE     0x1B

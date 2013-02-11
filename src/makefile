@@ -13,7 +13,7 @@
 
 MCU          = at90usb162
 ARCH         = AVR8
-BOARD        = MINIMUS
+BOARD        = BOARD_USER
 F_CPU        = 16000000
 F_USB        = $(F_CPU)
 OPTIMIZATION = s

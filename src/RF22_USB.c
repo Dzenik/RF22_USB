@@ -194,6 +194,8 @@ void SetupHardware(void)
 	/* Hardware Initialization */
 	USB_Init();
 
+    LEDs_Init();
+    LEDs_TurnOnLEDs(LEDS_LED1);
 	/* RFM22 Initialization */
 	rfm23_init();
 	rfm23_setup();
