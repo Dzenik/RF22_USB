@@ -72,45 +72,45 @@
 		#if !defined(__DOXYGEN__)
 			static inline void LEDs_Init(void)
 			{
-				DDRD |= LEDS_ALL_LEDS;
-				PORTD |= LEDS_ALL_LEDS;
+				DDRB |= LEDS_ALL_LEDS;
+				PORTB |= LEDS_ALL_LEDS;
 			}
 
 			static inline void LEDs_Disable(void)
 			{
-				DDRD &= ~LEDS_ALL_LEDS;
-				PORTD &= ~LEDS_ALL_LEDS;
+				DDRB &= ~LEDS_ALL_LEDS;
+				PORTB &= ~LEDS_ALL_LEDS;
 			}
 
 			static inline void LEDs_TurnOnLEDs(const uint8_t LEDMask)
 			{
-				PORTD &= ~LEDMask;
+				PORTB &= ~LEDMask;
 			}
 
 			static inline void LEDs_TurnOffLEDs(const uint8_t LEDMask)
 			{
-				PORTD |=  LEDMask;
+				PORTB |=  LEDMask;
 			}
 
 			static inline void LEDs_SetAllLEDs(const uint8_t LEDMask)
 			{
-				PORTD = ((PORTD | LEDS_ALL_LEDS) & ~LEDMask);
+				PORTB = ((PORTB | LEDS_ALL_LEDS) & ~LEDMask);
 			}
 
 			static inline void LEDs_ChangeLEDs(const uint8_t LEDMask, const uint8_t ActiveMask)
 			{
-				PORTD = ((PORTD | LEDMask) & ~ActiveMask);
+				PORTB = ((PORTB | LEDMask) & ~ActiveMask);
 			}
 
 			static inline void LEDs_ToggleLEDs(const uint8_t LEDMask)
 			{
-				PIND  = LEDMask;
+				PINB  = LEDMask;
 			}
 
 			static inline uint8_t LEDs_GetLEDs(void) ATTR_WARN_UNUSED_RESULT;
 			static inline uint8_t LEDs_GetLEDs(void)
 			{
-				return (~PORTD & LEDS_ALL_LEDS);
+				return (~PORTB & LEDS_ALL_LEDS);
 			}
 		#endif
 

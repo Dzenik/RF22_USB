@@ -650,3 +650,23 @@ void rfm23_setup(void)
 //0x7F R/W - FIFO access    
 
 }
+/*
+ISR(RFM23_IRO_VECTOR, ISR_BLOCK)
+{
+	if(!bit_is_set(RFM23_NIRQ_PIN, RFM23_NIRQ)
+	{
+		rfm23_handle_interrupt();
+
+		switch(rfm23_get_isr_2())
+		{
+			case 0x02:
+			break;
+			case 0x04:
+			break;
+
+			default:
+			break;
+		}
+	}
+}
+*/

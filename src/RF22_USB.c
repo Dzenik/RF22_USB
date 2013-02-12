@@ -1,47 +1,4 @@
-/*
-             LUFA Library
-     Copyright (C) Dean Camera, 2012.
-
-  dean [at] fourwalledcubicle [dot] com
-           www.lufa-lib.org
-*/
-
-/*
-  Copyright 2012  Dean Camera (dean [at] fourwalledcubicle [dot] com)
-  Copyright 2012  Simon Foster (simon.foster [at] inbox [dot] com)
-
-  Permission to use, copy, modify, distribute, and sell this
-  software and its documentation for any purpose is hereby granted
-  without fee, provided that the above copyright notice appear in
-  all copies and that both that the copyright notice and this
-  permission notice and warranty disclaimer appear in supporting
-  documentation, and that the name of the author not be used in
-  advertising or publicity pertaining to distribution of the
-  software without specific, written prior permission.
-
-  The author disclaim all warranties with regard to this
-  software, including all implied warranties of merchantability
-  and fitness.  In no event shall the author be liable for any
-  special, indirect or consequential damages or any damages
-  whatsoever resulting from loss of use, data or profits, whether
-  in an action of contract, negligence or other tortious action,
-  arising out of or in connection with the use or performance of
-  this software.
-*/
-
-/** \file 
- *
- *  Main source file for the SerialToLCD program. This file contains the main tasks of
- *  the project and is responsible for the initial application hardware configuration.
- */
-
 #include "RF22_USB.h"
-
-/** Circular buffer to hold data from the host before it is sent to the LCD */
-//static RingBuffer_t FromHost_Buffer;
-
-/** Underlying data buffer for \ref FromHost_Buffer, where the stored bytes are located. */
-//static uint8_t      FromHost_Buffer_Data[128];
 
 static volatile bool IRQ_TRIGGERED;			//Flag indicating when an IRQ has occured
 static volatile long int  DELAY_INTRS = 0;		//Used in timer 2 for timeouts
@@ -107,6 +64,7 @@ int main(void)
 	IRQ_TRIGGERED = false;
 
 	SetupHardware();
+    LEDs_SetAllLEDs(LEDS_ALL_LEDS);
 
 //	RingBuffer_InitBuffer(&FromHost_Buffer, FromHost_Buffer_Data, sizeof(FromHost_Buffer_Data));
 
@@ -134,48 +92,6 @@ int main(void)
 			}
 		}
 
-		// /* Only try to read in bytes from the CDC interface if the transmit buffer is not full */
-		// if (!(RingBuffer_IsFull(&FromHost_Buffer)))
-		// {
-		// 	int16_t ReceivedByte = CDC_Device_ReceiveByte(&VirtualSerial_CDC_Interface);
-
-		// 	/* Read bytes from the USB OUT endpoint into the USART transmit buffer */
-		// 	if (!(ReceivedByte < 0))
-		// 	  RingBuffer_Insert(&FromHost_Buffer, ReceivedByte);
-		// }
-
-		// while (RingBuffer_GetCount(&FromHost_Buffer) > 0)
-		// {
-		// 	static uint8_t EscapePending = 0;
-		// 	int16_t HD44780Byte = RingBuffer_Remove(&FromHost_Buffer);
-			
-		// 	if (HD44780Byte == COMMAND_ESCAPE)
-		// 	{
-		// 		if (EscapePending)
-		// 		{
-		// 			HD44780_WriteData(HD44780Byte);
-		// 			EscapePending = 0;
-		// 		}
-		// 		else
-		// 		{
-		// 			/* Next received character is the command byte */
-		// 			EscapePending = 1;
-		// 		}
-		// 	}
-		// 	else
-		// 	{
-		// 		if (EscapePending)
-		// 		{
-		// 			HD44780_WriteCommand(HD44780Byte);
-		// 			EscapePending = 0;
-		// 		}
-		// 		else
-		// 		{
-		// 			HD44780_WriteData(HD44780Byte);
-		// 		}
-		// 	}
-		// }
-
 		CDC_Device_USBTask(&VirtualSerial_CDC_Interface);
 		USB_USBTask();
 	}
@@ -192,10 +108,9 @@ void SetupHardware(void)
 	clock_prescale_set(clock_div_1);
 
 	/* Hardware Initialization */
+    LEDs_Init();
 	USB_Init();
 
-    LEDs_Init();
-    LEDs_TurnOnLEDs(LEDS_LED1);
 	/* RFM22 Initialization */
 	rfm23_init();
 	rfm23_setup();
@@ -217,10 +132,26 @@ void SetupHardware(void)
 //	TCCR0B = (1 << CS02);
 }
 
+/** Event handler for the library USB Connection event. */
+void EVENT_USB_Device_Connect(void)
+{
+    LEDs_SetAllLEDs(LEDS_ALL_LEDS);
+}
+
+/** Event handler for the library USB Disconnection event. */
+void EVENT_USB_Device_Disconnect(void)
+{
+    LEDs_SetAllLEDs(LEDS_NO_LEDS);
+}
+
 /** Event handler for the library USB Configuration Changed event. */
 void EVENT_USB_Device_ConfigurationChanged(void)
 {
-	CDC_Device_ConfigureEndpoints(&VirtualSerial_CDC_Interface);
+	bool ConfigSuccess = true;
+
+    ConfigSuccess &= CDC_Device_ConfigureEndpoints(&VirtualSerial_CDC_Interface);
+
+    LEDs_SetAllLEDs(ConfigSuccess ? LEDS_ALL_LEDS : LEDS_NO_LEDS);
 }
 
 /** Event handler for the library USB Control Request reception event. */
@@ -321,14 +252,14 @@ void API_Handler(int API_instruction, unsigned char* tx_buffer, unsigned char* r
             if(slot_time_index < LEN_SLOT_TIME_ARRAY)
             {
                 SLOT_TIME = SLOT_TIME_ARRAY[slot_time_index];
-                PORTC |= (0x01 << 0x00);  //Clears the blue on the RGB LED
+//                PORTC |= (0x01 << 0x00);  //Clears the blue on the RGB LED
             }
             else{
                 //Clears LEDs
-                PORTC |= (0x01 << 0x00);
+//                PORTC |= (0x01 << 0x00);
 //                PORTE |= (0x03 << 0x00);
 
-                PORTC &= ~(0x01 << 0x00); //Causes RGB LED to go blue representing an failure to change slot time
+//                PORTC &= ~(0x01 << 0x00); //Causes RGB LED to go blue representing an failure to change slot time
             }
             break;
         case 0x80:	//Set Maxmimum Transmissions
@@ -390,10 +321,10 @@ void ALOHA_Transmit(unsigned char* tx_buffer, unsigned char * rx_buffer, bool AP
     uint8_t transmissions;
     long long int timeout_count = 0;
     long long int timeout_limit = 0;
-//    static long long int backoff_number;
-//    static long int random_number_max;
+    static long long int backoff_number;
+    static long int random_number_max;
     unsigned char stats_packet[13];	//Statistics packet returned to higher layers
-//    static long unsigned int mult;
+    static long unsigned int mult;
     
     //Creating the aloha frame (that we wish to send) from the incoming tx_buffer (frame + instruction headers)
     for (tx_count = 0; tx_count < tx_buffer[1]; tx_count++)
@@ -445,7 +376,7 @@ void ALOHA_Transmit(unsigned char* tx_buffer, unsigned char * rx_buffer, bool AP
         }//while
 
         //Random back-off timer for retransmissions
-/*        if(!VALID_ACK && (transmissions < MAX_TRANSMISSIONS))
+        if(!VALID_ACK && (transmissions < MAX_TRANSMISSIONS))
         {
             timeout_count = 256*DELAY_INTRS + TCNT1;
             //Sets the maximum number of slot times to back off for
@@ -455,23 +386,23 @@ void ALOHA_Transmit(unsigned char* tx_buffer, unsigned char * rx_buffer, bool AP
                 }
                 else
                 {
-                    random_number_max = pow(2, BACKOFF_LIMIT+1) - 1;
+//                    random_number_max = pow(2, BACKOFF_LIMIT+1) - 1;
                 }//if(pow...)
         
                 //Random number generator (from StackOverflow)
-                do
+/*                do
                 {
                     mult = rand()/(RAND_MAX/(random_number_max + 1) );
                 }
                 while(mult > random_number_max);
-                
+*/                
                 backoff_number = mult * SLOT_TIME + timeout_count;
                 while(timeout_count < backoff_number)
                 {
                     timeout_count = 256*DELAY_INTRS + TCNT1;
                 }//while
         }//if(!valid_ACK)
-*/        
+        
     }//while(!valid_ACK && transmissions < MAX_TRANSMISSIONS)
 
     TCCR1B = 0x00; 	//Stops delay timer
@@ -569,17 +500,13 @@ void Transmit(unsigned char *tx_packet, bool API_instruction_flag)
     rfm23_write(0x07, 0x09);      // Start TX
 }
 
-ISR(INT0_vect, ISR_NOBLOCK)
+ISR(INT0_vect, ISR_BLOCK)
 {
-	cli();
 	IRQ_TRIGGERED = true;	
-	sei();
 }
 
-ISR(TIMER1_OVF_vect)
+ISR(TIMER1_OVF_vect, ISR_BLOCK)
 {
-    cli();
     //Timer 2 used to measure time to complete transmission
     DELAY_INTRS++;
-    sei();
 }

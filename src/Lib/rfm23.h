@@ -19,7 +19,7 @@
 #define RFM23_NIRQ_PORT			PORTD
 #define RFM23_NIRQ_DDR			DDRD
 #define RFM23_NIRQ_PIN			PIND
-
+#define RFM23_IRO_VECTOR		INT0_vect
 
 // interrupt status register 1
 #define RFM23_03h_ISR1				0x03
